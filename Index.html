@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Index Test Mobile Site</title>
+<script src="cordova-1.7.0.js"></script> 
+<script src="libs/jquery-1.7.1.js"></script> 
+<script src="libs/jquery.animate-enhanced.js"></script> 
+<script src="libs/iscroll.js"></script> 
+<script src="libs/noClickDelay.js"></script> 
+<link rel="stylesheet" href="viewnavigator/viewnavigator.css" type="text/css"/> 
+<script src="viewnavigator/viewnavigator.js"></script> 
+<link rel="stylesheet" href="libs/css/activityIndicator.css" type="text/css" />
+
+<script>
+		
+			var API_KEY = "9vfq9tjg4gn2fy2qd4h6zsvg";
+			
+			var data = [],
+				rootView=undefined,
+				rootData=undefined;
+				
+			function renderDefaultView() {
+				rootView.view.children().remove();
+				var html = "<ul>";
+				for ( var i = 0; i < rootData.movies.length; i ++ )
+				{
+					var movie = rootData.movies[i];
+					html += "<li id='" + movie.id + "'onclick='renderDetails(\"" + i + "\")'>" + movie.title + "</li>";	
+				}
+				html += "</ul>";
+				rootView.view.html( html );
+				window.viewNavigator.resetScroller();
+			}
+			
+			function renderDetails(index) {
+				var movie = rootData.movies[index];
+				
+				rootView.view.find( "li" ).each(function(index) {
+					$(this).removeClass( "listSelected" );
+				});
+				
+				$( "#"+movie.id ).addClass( "listSelected" );
+				
+				var html = "<div id='detail'>";
+				html += "<h1>" + movie.title + "</h1>";
+				html += "<p><strong>" + movie.mpaa_rating + "</strong>, " + 
+						movie.runtime + "min. - (" + movie.year + ")</p>";
+				html += "<img src=\"" + movie.posters.profile + "\" class='moviePoster'>";
+				html += "<p>" + movie.synopsis + "</p>";
+				html += "<h3>Ratings:</h3><p>";
+				html +=    "<strong>Audience:</strong> " + 
+						movie.ratings.audience_score + " - " + 
+						movie.ratings.audience_rating + "<br>" 
+				html +=    "<strong>Critics:</strong> " + 
+						movie.ratings.critics_score + " - " + 
+						movie.ratings.critics_rating + "<br>" 
+				html += "</p>"
+				html += "<h4>What the critics say:</h4><p>" + movie.critics_consensus + "</p>";
+				html += "<h3>Cast:</h3><p><ul>";
+				
+				for ( var i = 0; i < movie.abridged_cast.length; i ++ ) {
+					var actor = movie.abridged_cast[i];
+					html += "<li><strong>" + actor.name + ":</strong> ";
+					
+					if ( actor.characters ) {
+						for ( var j = 0; j < actor.characters.length; j ++ )
+						{
+							if ( j > 0 ) { html += ", " };
+							html += actor.characters[j];
+						}
+					}
+					html += "</li>";	
+				}
+				
+				html += "</ul></p></div>";
+				
+				var viewDescriptor =  { title: movie.title, 
+					view:  $(html),
+					backLabel: "Back"
+				};
+				
+				window.viewNavigator.pushView( viewDescriptor );
+			}
+		
+			$(document).ready( function() {
+				
+			   
+				rootView =  { title: "Rotten Tomatoes", 
+					view:  $("<div id='rootView'><div class='activityIndicator'></div></div>")
+				};
+					
+				window.viewNavigator = new ViewNavigator( 'body' );
+				window.viewNavigator.pushView( rootView );
+					
+				var url = "http://api.rottentomatoes.com/api/public/v1.0/lists/movies/box_office.json?limit=25&country=us&apikey=" + API_KEY;
+				$.ajax({
+					url: url,
+					dataType: "json",
+					success: function(data, textStatus, jqXHR) {
+						rootData = data;
+						renderDefaultView();
+					},
+					error: function(jqXHR, textStatus, errorThrown) { 
+						alert("error") 
+					}
+				});
+					
+			} );
+		</script>
+
+<style>
+            
+            * {
+                font-family: Arial, sans-serif;
+            }
+             
+            
+            .listSelected {
+                background-color:#555;
+                background-color:rgba(0,0,0,0.75);
+                color: #FFF;
+                font-weight:bold;
+            }
+            
+            ul,li {
+                padding:0;
+                margin:0;
+                border:0;
+            }
+            
+            .viewNavigator_contentHolder li {
+                padding:0 10px;
+                border-bottom:1px solid #ccc;
+                height:40px; line-height:40px;
+                font-weight:normal;
+                cursor:pointer;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                -o-text-overflow: ellipsis;
+                -moz-binding: url('assets/xml/ellipsis.xml#ellipsis');
+            }
+			
+			
+            #detail {
+                padding:10px;
+            }
+            
+            .moviePoster {
+                float:right;
+                width:120px;
+                height:178px;
+                overflow:hidden;
+                margin:10px;
+                padding:2px;
+                border:1px solid #999999;
+            }
+            
+            
+            #detail li {
+                
+                white-space: normal;
+                overflow: visible;
+                height:auto; 
+            }
+			 
+			.viewNavigator_header {
+				background:url(assets/header_background.png);	
+			}
+			
+			.viewNavigator_content,
+			.viewNavigator_contentHolder  {
+				background:white;	
+			}
+			
+			#detail,
+			#rootView  {
+				background-image:url(assets/tomato.png);
+				background-position:center 50px;
+				background-repeat:no-repeat;	
+			}
+			
+			.viewNavigator_backButton {
+				-webkit-border-radius: 0px;
+				-moz-border-radius: 0px;
+				border-radius: 0px;	
+				background:#555;
+				color:white;
+				border:1px solid black;
+			}
+            
+        </style>
+
+</head>
+
+<body>
+</body>
+</html>
